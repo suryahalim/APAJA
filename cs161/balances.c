@@ -92,7 +92,6 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	}
 
 	// FOURTH BULLET POINT
-
 	// the prev_transaction_hash in reward_tx must be equal to zero.
 	if (byte32_is_zero(node->b.reward_tx.prev_transaction_hash) == 0){
 		printf("INI GOBLOK TES 4!!! \n\n");
@@ -152,11 +151,12 @@ int validness_test (const struct blockchain_node *node, int argc) {
 		// LAST BULLET POINT
 		struct blockchain_node *dummy_node = node->parent;
 
-		while (dummy_node->parent != NULL) {
-			if (byte32_cmp(dummy_node->b.normal_tx.prev_transaction_hash, dummy_node->parent->b.normal_tx.prev_transaction_hash) == 0) {
+		while (dummy_node->parent != dummy_node) {
+			if (byte32_cmp(dummy_node->b.normal_tx.prev_transaction_hash,node->b.normal_tx.prev_transaction_hash ) == 0) {
 				printf("INI GOBLOK  TES 5.4!!! \n\n");
 				return 0;
 			}
+			dummy_node = dummy_node->parent;
 		}
 
 	}
@@ -278,43 +278,22 @@ int main(int argc, char *argv[])
     	}
     }
 
-    hash_output parent_hash;
-    block_hash(&array_of_block[7].b, parent_hash);
-    printf(" asdasdasd: %i \n",byte32_cmp(array_of_block[9].b.prev_block_hash, parent_hash));
-
     for (i = 1; i < 10; i++) {
     	printf("block b's height: [%u], block b's parents height: [%u] \n",array_of_block[i].b.height, array_of_block[i].parent->b.height);
     }
+  
 
-    // printf("BLOCK %i \n\n\n", array_of_block[1].parent->b.height);
-    
     // Check validness
-    array_of_block[1].is_valid = 1;
-    int test = validness_test(&array_of_block[1], argc);
-    printf("THIS IS FIRST TEST: %i \n", test);
+    for (i = 0 ; i <10 ; i++){
+	    // printf("THIS IS FIRST TEST: %i \n",i);
+	    // int test = 0;
+	    // array_of_block[i].is_valid =1;
+	    // test =validness_test(&array_of_block[i], argc);
+    }
+    int test = 0;
+    array_of_block[3].is_valid =1;
+    test =validness_test(&array_of_block[4], argc);   
 
-	int test1 =0;
-    test1 = validness_test(&array_of_block[0], argc);
-    // hash_output hop;
-
-    // for (i =1; i < argc; i++) {
-    // 	printf("block b's height: [%u] \n",array_of_block[i].b.height);
-
-    // 	// check the block that has height 0 must have genesis value
-    // 	if (array_of_block[i].b.height == 0) {
-
-    // 		block_hash(&array_of_block[i].b, hop);
-    // 		if (byte32_cmp(GENESIS_BLOCK_HASH, hop) != 0) {
-    // 			printf("%i \n", byte32_cmp(GENESIS_BLOCK_HASH, hop));
-    // 			printf("INI GOBLOK!!! \n\n");
-    // 		}
-    // 	}
-
-    // 	// if the block has height >= 1, its parent must be a valid parent with height h-1
-    // 	else if (array_of_block[i].b.height >= 1) {
-
-    // 	}
-    // }
 
 	/* Organize into a tree, check validity, and output balances. */
 	/* TODO */
