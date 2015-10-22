@@ -51,7 +51,7 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 		block_hash(&node->b, hop);
 		if (byte32_cmp(GENESIS_BLOCK_HASH, hop) != 0) {
-			printf("INI GOBLOK!!! \n\n");
+			printf("INI GOBLOK TES 1!!! \n\n");
 			return 0;
 		}
 	}
@@ -60,12 +60,12 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	else if (node->b.height >= 1) {
 
 		if (node->parent->is_valid != 1) {
-			printf("INI GOBLOK!!! \n\n");
+			printf("INI GOBLOK TES 1.2!!! \n\n");
 			return 0;
 		}
 
 		if (node->parent->b.height != node->b.height - 1) {
-			printf("INI GOBLOK!!! \n\n");
+			printf("INI GOBLOK TES 1.3!!! \n\n");
 			return 0;
 		}
 	}
@@ -76,7 +76,7 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	hash_output test_target_hash;
 	block_hash(&node->b, test_target_hash);
 	if (hash_output_is_below_target(test_target_hash) == 0) {
-		printf("INI GOBLOK !!! \n\n");
+		printf("INI GOBLOK TES 2!!! \n\n");
 		return 0;
 	}
 
@@ -87,7 +87,7 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	int height_trans_1 = node->b.reward_tx.height;
 	int height_trans_2 = node->b.normal_tx.height;
 	if (height_of_block != height_trans_1 || height_of_block != height_trans_2){
-		printf("INI GOBLOK !!! \n\n");
+		printf("INI GOBLOK ! TES 3!! \n\n");
 		return 0;
 	}
 
@@ -95,17 +95,19 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 	// the prev_transaction_hash in reward_tx must be equal to zero.
 	if (byte32_is_zero(node->b.reward_tx.prev_transaction_hash) == 0){
-		printf("INI GOBLOK !!! \n\n");
+		printf("INI GOBLOK TES 4!!! \n\n");
 		return 0;
 	}
 
 	// reward_tx.src signature r and signature s must be equal to zero (byte32_is_zero return 1 if true, else zero).
 	if (byte32_is_zero(node->b.reward_tx.src_signature.r) == 0 || byte32_is_zero(node->b.reward_tx.src_signature.s) == 0){
-		printf("INI GOBLOK !!! \n\n");
+		printf("INI GOBLOK  TES 4.2!!! \n\n");
 		return 0;
 	}
 
-	// FIFTH BULLET POINT
+	// FIFTH BULLET POINT BELOM BENER
+	// struct blockchain_node temp_node = b
+	// while 
 	hash_output trans1;
 	hash_output trans2;
 
@@ -114,42 +116,50 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 	if (byte32_is_zero(node->b.normal_tx.prev_transaction_hash) == 0) {
 		if(byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans1) != 0 && byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans2) != 0) {
-			printf("INI GOBLOK !!! \n\n");
+			printf("INI GOBLOK TES 5!!! \n\n");
 			return 0;
 		}
-	}
+	
 
 	// FIFTH II BULLET POINT
 	//The signature on normal_tx must be valid using the dest_pubkey of the previous transaction that has hash value normal_tx.prev_transaction_hash. 
 	//(Use the transaction_verify function.)
 
-	hash_output prev_trans1;
-	hash_output prev_trans2;
+		hash_output prev_trans1;
+		hash_output prev_trans2;
 
-	transaction_hash(&node->parent->b.normal_tx, prev_trans1);
-	transaction_hash(&node->parent->b.reward_tx, prev_trans2);
+		transaction_hash(&node->parent->b.normal_tx, prev_trans1);
+		transaction_hash(&node->parent->b.reward_tx, prev_trans2);
 
-	struct transaction temp_trans1;
+		struct transaction temp_trans1;
 
-	temp_trans1 = node->b.normal_tx;
+		temp_trans1 = node->b.normal_tx;
 
-	if (byte32_cmp(prev_trans1, node->b.normal_tx.prev_transaction_hash) == 0) {
-		if (transaction_verify(&(temp_trans1), &node->parent->b.normal_tx) != 1) {
-			printf("INI GOBLOK !!! \n\n");
-			return 0;
+		if (byte32_cmp(prev_trans1, node->b.normal_tx.prev_transaction_hash) == 0) {
+			if (transaction_verify(&(temp_trans1), &node->parent->b.normal_tx) != 1) {
+				printf("INI GOBLOK TES 5.2!!! \n\n");
+				return 0;
+			}
 		}
-	}
 
-	else if (byte32_cmp(prev_trans2, node->b.normal_tx.prev_transaction_hash) == 0) {
-		if (transaction_verify(&(temp_trans1), &node->parent->b.reward_tx) != 1) {
-			printf("INI GOBLOK !!! \n\n");
-			return 0;
+		else if (byte32_cmp(prev_trans2, node->b.normal_tx.prev_transaction_hash) == 0) {
+			if (transaction_verify(&(temp_trans1), &node->parent->b.reward_tx) != 1) {
+				printf("INI GOBLOK TES 5.3!!! \n\n");
+				return 0;
+			}
 		}
+
+		// LAST BULLET POINT
+		struct blockchain_node *dummy_node = node->parent;
+
+		while (dummy_node->parent != NULL) {
+			if (byte32_cmp(dummy_node->b.normal_tx.prev_transaction_hash, dummy_node->parent->b.normal_tx.prev_transaction_hash) == 0) {
+				printf("INI GOBLOK  TES 5.4!!! \n\n");
+				return 0;
+			}
+		}
+
 	}
-
-	// LAST BULLET POINT
-
-    // }	
 
     return 1;
 
@@ -249,7 +259,7 @@ int main(int argc, char *argv[])
 
     	//if genesis block, then the parent is null
     	if (array_of_block[i].b.height == 0){
-    		array_of_block[i].parent = NULL;
+    		array_of_block[i].parent = &array_of_block[i];
     	}
 
     	else {
@@ -272,31 +282,39 @@ int main(int argc, char *argv[])
     block_hash(&array_of_block[7].b, parent_hash);
     printf(" asdasdasd: %i \n",byte32_cmp(array_of_block[9].b.prev_block_hash, parent_hash));
 
-    for (i = 2; i < 10; i++) {
+    for (i = 1; i < 10; i++) {
     	printf("block b's height: [%u], block b's parents height: [%u] \n",array_of_block[i].b.height, array_of_block[i].parent->b.height);
     }
 
+    // printf("BLOCK %i \n\n\n", array_of_block[1].parent->b.height);
+    
+    // Check validness
+    array_of_block[1].is_valid = 1;
+    int test = validness_test(&array_of_block[1], argc);
+    printf("THIS IS FIRST TEST: %i \n", test);
 
-    hash_output hop;
+	int test1 =0;
+    test1 = validness_test(&array_of_block[0], argc);
+    // hash_output hop;
 
-    for (i =1; i < argc; i++) {
-    	printf("block b's height: [%u] \n",array_of_block[i].b.height);
+    // for (i =1; i < argc; i++) {
+    // 	printf("block b's height: [%u] \n",array_of_block[i].b.height);
 
-    	// check the block that has height 0 must have genesis value
-    	if (array_of_block[i].b.height == 0) {
+    // 	// check the block that has height 0 must have genesis value
+    // 	if (array_of_block[i].b.height == 0) {
 
-    		block_hash(&array_of_block[i].b, hop);
-    		if (byte32_cmp(GENESIS_BLOCK_HASH, hop) != 0) {
-    			printf("%i \n", byte32_cmp(GENESIS_BLOCK_HASH, hop));
-    			printf("INI GOBLOK!!! \n\n");
-    		}
-    	}
+    // 		block_hash(&array_of_block[i].b, hop);
+    // 		if (byte32_cmp(GENESIS_BLOCK_HASH, hop) != 0) {
+    // 			printf("%i \n", byte32_cmp(GENESIS_BLOCK_HASH, hop));
+    // 			printf("INI GOBLOK!!! \n\n");
+    // 		}
+    // 	}
 
-    	// if the block has height >= 1, its parent must be a valid parent with height h-1
-    	else if (array_of_block[i].b.height >= 1) {
+    // 	// if the block has height >= 1, its parent must be a valid parent with height h-1
+    // 	else if (array_of_block[i].b.height >= 1) {
 
-    	}
-    }
+    // 	}
+    // }
 
 	/* Organize into a tree, check validity, and output balances. */
 	/* TODO */
