@@ -92,6 +92,7 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	}
 
 	// FOURTH BULLET POINT
+
 	// the prev_transaction_hash in reward_tx must be equal to zero.
 	if (byte32_is_zero(node->b.reward_tx.prev_transaction_hash) == 0){
 		printf("INI GOBLOK TES 4!!! \n\n");
@@ -104,20 +105,39 @@ int validness_test (const struct blockchain_node *node, int argc) {
 		return 0;
 	}
 
-	// FIFTH BULLET POINT BELOM BENER
-	// struct blockchain_node temp_node = b
-	// while 
+	// FIFTH BULLET POINT
+	
 	hash_output trans1;
 	hash_output trans2;
 
-	transaction_hash(&node->parent->b.normal_tx, trans1);
-	transaction_hash(&node->parent->b.reward_tx, trans2);
-
 	if (byte32_is_zero(node->b.normal_tx.prev_transaction_hash) == 0) {
-		if(byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans1) != 0 && byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans2) != 0) {
+
+		struct blockchain_node *temp_node = node->parent;
+		int tester = 0;
+
+		while (temp_node->parent != temp_node) {
+
+			transaction_hash(&temp_node->b.normal_tx, trans1);
+			transaction_hash(&temp_node->b.reward_tx, trans2);
+
+			if(byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans1) == 0 || byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans2) == 0)
+				tester = 1;
+
+			temp_node = temp_node->parent;
+		}
+
+		if (tester == 0) {
 			printf("INI GOBLOK TES 5!!! \n\n");
 			return 0;
 		}
+
+		// transaction_hash(&node->parent->b.normal_tx, trans1);
+		// transaction_hash(&node->parent->b.reward_tx, trans2);
+
+		// if(byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans1) != 0 && byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans2) != 0) {
+		// 	printf("INI GOBLOK TES 5!!! \n\n");
+		// 	return 0;
+		// }
 	
 
 	// FIFTH II BULLET POINT
@@ -149,10 +169,11 @@ int validness_test (const struct blockchain_node *node, int argc) {
 		}
 
 		// LAST BULLET POINT
+
 		struct blockchain_node *dummy_node = node->parent;
 
 		while (dummy_node->parent != dummy_node) {
-			if (byte32_cmp(dummy_node->b.normal_tx.prev_transaction_hash,node->b.normal_tx.prev_transaction_hash ) == 0) {
+			if (byte32_cmp(dummy_node->b.normal_tx.prev_transaction_hash, node->b.normal_tx.prev_transaction_hash) == 0) {
 				printf("INI GOBLOK  TES 5.4!!! \n\n");
 				return 0;
 			}
@@ -253,7 +274,6 @@ int main(int argc, char *argv[])
         }
     }
 
-
     // making the tree connections
     for (i=1; i < argc; ++i) {
 
@@ -263,37 +283,68 @@ int main(int argc, char *argv[])
     	}
 
     	else {
+    		int single = 0;
     		for (int p=1; p < argc; ++p) {
     			hash_output parent_hash;
     			block_hash(&array_of_block[p].b, parent_hash);
 
     			// if block b.prev_block_hash is hash(parent) then assign blockchain_node[i]'s parent to blockhain_node[p].
     			if (byte32_cmp(array_of_block[i].b.prev_block_hash, parent_hash) == 0) {
-
+    				single = 1;
     				array_of_block[i].parent = &array_of_block[p];
     			}
+    			if (single == 0)
+    				array_of_block[i].parent = &array_of_block[i];
 
     		}
 
     	}
     }
 
-    for (i = 1; i < 10; i++) {
+    hash_output parent_hash;
+    block_hash(&array_of_block[7].b, parent_hash);
+
+    for (i = 1; i < argc; ++i) {
     	printf("block b's height: [%u], block b's parents height: [%u] \n",array_of_block[i].b.height, array_of_block[i].parent->b.height);
     }
-  
 
-    // Check validness
-    for (i = 0 ; i <10 ; i++){
-	    // printf("THIS IS FIRST TEST: %i \n",i);
-	    // int test = 0;
-	    // array_of_block[i].is_valid =1;
-	    // test =validness_test(&array_of_block[i], argc);
-    }
-    int test = 0;
-    array_of_block[3].is_valid =1;
-    test =validness_test(&array_of_block[4], argc);   
+    // printf("BLOCK %i \n\n\n", array_of_block[1].parent->b.height);
+    
+    // Check validness of one block
+  //   int num = 0;
 
+  //   array_of_block[1].is_valid = 1;
+  //   array_of_block[2].is_valid = 1;
+  //   array_of_block[3].is_valid = 1;
+  //   array_of_block[4].is_valid = 1;
+  //   array_of_block[5].is_valid = 1;
+ 	// array_of_block[6].is_valid = 0;
+ 	// array_of_block[7].is_valid = 1;
+ 	// array_of_block[8].is_valid = 0;
+ 	// array_of_block[9].is_valid = 1;
+
+  //   int test = validness_test(&array_of_block[num], argc);
+
+  //   if (test == 1)
+  //   	printf("TEST[%i] SUCCEED: %i \n",num, test);
+
+  //  	else
+  //  		printf("FAIL NGENTOT %i \n\n", test);
+
+
+   	// ASSIGN VALIDITY TO ALL BLOCKS
+
+   	for (i = 1; i < argc; ++i) {
+   		array_of_block[i].is_valid = validness_test(&array_of_block[i], argc);
+   	}
+
+   	for (i = 1; i < argc; ++i) {
+   		if (array_of_block[i].is_valid == 1)
+   			printf("BLOCK[%i] IS VALID!\n",i);
+   		else
+   			printf("BLOCK[%i] IS NOTTTTT VALID!\n",i);
+
+   	}
 
 	/* Organize into a tree, check validity, and output balances. */
 	/* TODO */
