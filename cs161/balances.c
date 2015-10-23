@@ -51,7 +51,8 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 		block_hash(&node->b, hop);
 		if (byte32_cmp(GENESIS_BLOCK_HASH, hop) != 0) {
-			printf("INI GOBLOK TES 1!!! \n\n");
+
+			printf("Failed on test 1!!! \n\n");
 			return 0;
 		}
 	}
@@ -60,12 +61,12 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	else if (node->b.height >= 1) {
 
 		if (node->parent->is_valid != 1) {
-			printf("INI GOBLOK TES 1.2!!! \n\n");
+			printf("Failed on test 1.2!!! \n\n");
 			return 0;
 		}
 
 		if (node->parent->b.height != node->b.height - 1) {
-			printf("INI GOBLOK TES 1.3!!! \n\n");
+			printf("Failed on test 1.3!!! \n\n");
 			return 0;
 		}
 	}
@@ -76,7 +77,7 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	hash_output test_target_hash;
 	block_hash(&node->b, test_target_hash);
 	if (hash_output_is_below_target(test_target_hash) == 0) {
-		printf("INI GOBLOK TES 2!!! \n\n");
+		printf("Failed on test 2!!! \n\n");
 		return 0;
 	}
 
@@ -87,7 +88,7 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	int height_trans_1 = node->b.reward_tx.height;
 	int height_trans_2 = node->b.normal_tx.height;
 	if (height_of_block != height_trans_1 || height_of_block != height_trans_2){
-		printf("INI GOBLOK ! TES 3!! \n\n");
+		printf("Failed on test 3!! \n\n");
 		return 0;
 	}
 
@@ -95,13 +96,13 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 	// the prev_transaction_hash in reward_tx must be equal to zero.
 	if (byte32_is_zero(node->b.reward_tx.prev_transaction_hash) == 0){
-		printf("INI GOBLOK TES 4!!! \n\n");
+		printf("Failed on test 4!!! \n\n");
 		return 0;
 	}
 
 	// reward_tx.src signature r and signature s must be equal to zero (byte32_is_zero return 1 if true, else zero).
 	if (byte32_is_zero(node->b.reward_tx.src_signature.r) == 0 || byte32_is_zero(node->b.reward_tx.src_signature.s) == 0){
-		printf("INI GOBLOK  TES 4.2!!! \n\n");
+		printf("Failed on test 4.2!!! \n\n");
 		return 0;
 	}
 
@@ -127,17 +128,9 @@ int validness_test (const struct blockchain_node *node, int argc) {
 		}
 
 		if (tester == 0) {
-			printf("INI GOBLOK TES 5!!! \n\n");
+			printf("Failed on test 5!!! \n\n");
 			return 0;
 		}
-
-		// transaction_hash(&node->parent->b.normal_tx, trans1);
-		// transaction_hash(&node->parent->b.reward_tx, trans2);
-
-		// if(byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans1) != 0 && byte32_cmp(node->b.normal_tx.prev_transaction_hash, trans2) != 0) {
-		// 	printf("INI GOBLOK TES 5!!! \n\n");
-		// 	return 0;
-		// }
 	
 
 	// FIFTH II BULLET POINT
@@ -156,14 +149,14 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 		if (byte32_cmp(prev_trans1, node->b.normal_tx.prev_transaction_hash) == 0) {
 			if (transaction_verify(&(temp_trans1), &node->parent->b.normal_tx) != 1) {
-				printf("INI GOBLOK TES 5.2!!! \n\n");
+				printf("Failed on test 5.2!!! \n\n");
 				return 0;
 			}
 		}
 
 		else if (byte32_cmp(prev_trans2, node->b.normal_tx.prev_transaction_hash) == 0) {
 			if (transaction_verify(&(temp_trans1), &node->parent->b.reward_tx) != 1) {
-				printf("INI GOBLOK TES 5.3!!! \n\n");
+				printf("Failed on test 5.3!!! \n\n");
 				return 0;
 			}
 		}
@@ -219,6 +212,7 @@ static struct balance *balance_add(struct balance *balances,
 
 	return p;
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -308,30 +302,6 @@ int main(int argc, char *argv[])
     	printf("block b's height: [%u], block b's parents height: [%u] \n",array_of_block[i].b.height, array_of_block[i].parent->b.height);
     }
 
-    // printf("BLOCK %i \n\n\n", array_of_block[1].parent->b.height);
-    
-    // Check validness of one block
-  //   int num = 0;
-
-  //   array_of_block[1].is_valid = 1;
-  //   array_of_block[2].is_valid = 1;
-  //   array_of_block[3].is_valid = 1;
-  //   array_of_block[4].is_valid = 1;
-  //   array_of_block[5].is_valid = 1;
- 	// array_of_block[6].is_valid = 0;
- 	// array_of_block[7].is_valid = 1;
- 	// array_of_block[8].is_valid = 0;
- 	// array_of_block[9].is_valid = 1;
-
-  //   int test = validness_test(&array_of_block[num], argc);
-
-  //   if (test == 1)
-  //   	printf("TEST[%i] SUCCEED: %i \n",num, test);
-
-  //  	else
-  //  		printf("FAIL NGENTOT %i \n\n", test);
-
-
    	// ASSIGN VALIDITY TO ALL BLOCKS
 
    	for (i = 1; i < argc; ++i) {
@@ -342,7 +312,7 @@ int main(int argc, char *argv[])
    		if (array_of_block[i].is_valid == 1)
    			printf("BLOCK[%i] IS VALID!\n",i);
    		else
-   			printf("BLOCK[%i] IS NOTTTTT VALID!\n",i);
+   			printf("BLOCK[%i] IS NOT VALID!\n",i);
 
    	}
 
