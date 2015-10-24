@@ -19,18 +19,20 @@ const hash_output GENESIS_BLOCK_HASH = {
 	0x51, 0x0d, 0x40, 0x9d, 0x6c, 0xca, 0x89, 0x2e, 0xd1, 0xc7, 0x51, 0x98, 0xe0, 0x4b, 0xde, 0xec,
 };
 
-struct blockchain_node {
-	struct blockchain_node *parent;
-	struct block b;
-	int is_valid;
-	int order;
-};
-
 /* A simple linked list to keep track of account balances. */
 struct balance {
 	struct ecdsa_pubkey pubkey;
 	int balance;
+
 	struct balance *next;
+};
+
+struct blockchain_node {
+	struct blockchain_node *parent;
+	struct balance bal;
+	struct block b;
+	int is_valid;
+	int order;
 };
 
 /* function that checks for validness of a block
@@ -42,13 +44,12 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	hash_output hop;
 
 	// FIRST BULLET POINT
+
 	// check the block that has height 0 must have genesis value
 	if (node->b.height == 0) {
 
 		block_hash(&node->b, hop);
 		if (byte32_cmp(GENESIS_BLOCK_HASH, hop) != 0) {
-
-			printf("Failed on test 1!!! \n\n");
 			return 0;
 		}
 	}
@@ -57,12 +58,10 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	else if (node->b.height >= 1) {
 
 		if (node->parent->is_valid != 1) {
-			printf("Failed on test 1.2!!! \n\n");
 			return 0;
 		}
 
 		if (node->parent->b.height != node->b.height - 1) {
-			printf("Failed on test 1.3!!! \n\n");
 			return 0;
 		}
 	}
@@ -73,7 +72,6 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	hash_output test_target_hash;
 	block_hash(&node->b, test_target_hash);
 	if (hash_output_is_below_target(test_target_hash) == 0) {
-		printf("Failed on test 2!!! \n\n");
 		return 0;
 	}
 
@@ -84,7 +82,6 @@ int validness_test (const struct blockchain_node *node, int argc) {
 	int height_trans_1 = node->b.reward_tx.height;
 	int height_trans_2 = node->b.normal_tx.height;
 	if (height_of_block != height_trans_1 || height_of_block != height_trans_2){
-		printf("Failed on test 3!! \n\n");
 		return 0;
 	}
 
@@ -92,13 +89,11 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 	// the prev_transaction_hash in reward_tx must be equal to zero.
 	if (byte32_is_zero(node->b.reward_tx.prev_transaction_hash) == 0){
-		printf("Failed on test 4!!! \n\n");
 		return 0;
 	}
 
 	// reward_tx.src signature r and signature s must be equal to zero (byte32_is_zero return 1 if true, else zero).
 	if (byte32_is_zero(node->b.reward_tx.src_signature.r) == 0 || byte32_is_zero(node->b.reward_tx.src_signature.s) == 0){
-		printf("Failed on test 4.2!!! \n\n");
 		return 0;
 	}
 
@@ -124,9 +119,9 @@ int validness_test (const struct blockchain_node *node, int argc) {
 		}
 
 		if (tester == 0) {
-			printf("Failed on test 5!!! \n\n");
 			return 0;
 		}
+
 	
 
 	// FIFTH II BULLET POINT
@@ -145,14 +140,12 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 		if (byte32_cmp(prev_trans1, node->b.normal_tx.prev_transaction_hash) == 0) {
 			if (transaction_verify(&(temp_trans1), &node->parent->b.normal_tx) != 1) {
-				printf("Failed on test 5.2!!! \n\n");
 				return 0;
 			}
 		}
 
 		else if (byte32_cmp(prev_trans2, node->b.normal_tx.prev_transaction_hash) == 0) {
 			if (transaction_verify(&(temp_trans1), &node->parent->b.reward_tx) != 1) {
-				printf("Failed on test 5.3!!! \n\n");
 				return 0;
 			}
 		}
@@ -163,7 +156,6 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 		while (dummy_node->parent != dummy_node) {
 			if (byte32_cmp(dummy_node->b.normal_tx.prev_transaction_hash, node->b.normal_tx.prev_transaction_hash) == 0) {
-				printf("INI GOBLOK  TES 5.4!!! \n\n");
 				return 0;
 			}
 			dummy_node = dummy_node->parent;
@@ -209,7 +201,6 @@ static struct balance *balance_add(struct balance *balances,
 	return p;
 }
 
-
 int main(int argc, char *argv[])
 {
 	int i;
@@ -242,7 +233,6 @@ int main(int argc, char *argv[])
 
 		count ++;
 		array_of_block[i] = x;
-
 	}
 
 	// sorting an array
@@ -267,6 +257,7 @@ int main(int argc, char *argv[])
     	if (array_of_block[i].b.height == 0){
     		array_of_block[i].parent = &array_of_block[i];
     	}
+
     	else {
     		int single = 0;
     		for (int p=1; p < argc; ++p) {
@@ -280,65 +271,97 @@ int main(int argc, char *argv[])
     			}
     			if (single == 0)
     				array_of_block[i].parent = &array_of_block[i];
+
     		}
+
     	}
     }
 
     hash_output parent_hash;
     block_hash(&array_of_block[7].b, parent_hash);
 
-    for (i = 1; i < argc; ++i) {
-    	printf("block b's height: [%u], block b's parents height: [%u] \n",array_of_block[i].b.height, array_of_block[i].parent->b.height);
-    }
-
-	struct balance *balances = NULL, *p, *next;
-   	//making the balance from the built tree
-	
-	int max = 0;
    	// ASSIGN VALIDITY TO ALL BLOCKS
+
    	for (i = 1; i < argc; ++i) {
    		array_of_block[i].is_valid = validness_test(&array_of_block[i], argc);
    	}
 
+   	// GETTING THE LONGEST CHAIN
+   	int longest[argc];
+   	for (i=1; i < argc ; ++i)
+   		longest[i] = 1;
+
    	for (i = 1; i < argc; ++i) {
-   		if (array_of_block[i].is_valid == 1){
-   			// printf("BLOCK[%i] IS VALID!\n",i);
-   			array_of_block[i].parent = &array_of_block[i];
-   			if (array_of_block[i].parent->b.height >max )
-   			{
-   				max  = array_of_block[i].parent->b.height;
-   			}
+
+   		struct blockchain_node *iter_node = &array_of_block[i];
+
+   		if (array_of_block[i].is_valid == 1) {
+
+	   		while (iter_node->parent != iter_node){
+	   			longest[i] = longest[i] + 1;
+	   			iter_node= iter_node->parent;
+	   		}
    		}
-
    		else
-   			// printf("BLOCK[%i] IS NOT VALID!\n",i);
-			// array_of_block[i].parent = &array_of_block[i];
-			array_of_block[i].parent->b.height = -1;
+   			longest[i] = -1;
    	}
 
-	/* Organize into a tree, check validity, and output balances. */
-	/* TODO */
-	int mainPath[argc];
-	int mIndex = 0;
-   	for (i = 1; i<argc ; i++)
-   	{	
-   		if (array_of_block[i].parent->b.height !=-1)
-   		{
-   				// printf("blockno %i\n",i);
-   				mainPath[mIndex] = i;
-   				mIndex++;
-   		   		// printf("parent %i\n",array_of_block[i].parent->b.height);
-   		   		// if (array_of_block[i].parent->b.height == max ){
-   		   			// printf("Mainchain end\n");
-   		   		// }
-   		   		// printf("Max : %i\n", max );}
-   		 }
-   	}
-   	printf("Mainchain\n");
-	for (i = 0; i<argc;i++){
-		printf ("%i\n",mainPath[i]);
+   	// finding the longest
+
+   	struct blockchain_node *longest_node = &array_of_block[1];
+
+   	int max = -1;
+   	for (i=1; i<argc; ++i)
+	   {
+		 if (longest[i]>max)
+		 {
+		    max=longest[i];
+		    longest_node = &array_of_block[i];
+		 }
+	   }
+
+	struct blockchain_node *refresh_node = longest_node;
+
+	// BALANCE OUTPUT
+
+	struct balance *bal = NULL;
+	while (longest_node->parent != longest_node){
+
+		bal = balance_add(bal, &longest_node->b.reward_tx.dest_pubkey, 1);
+
+		if (byte32_is_zero(longest_node->b.normal_tx.prev_transaction_hash) == 0){
+
+			bal = balance_add(bal, &longest_node->b.normal_tx.dest_pubkey, 1);
+
+			struct blockchain_node *temporal_node = refresh_node;
+			while (temporal_node->parent != temporal_node ) {
+				hash_output compare_hash1;
+				hash_output compare_hash2;
+
+				transaction_hash(&temporal_node->b.normal_tx,compare_hash1);
+				transaction_hash(&temporal_node->b.reward_tx, compare_hash2);
+
+				if (byte32_cmp(longest_node->b.normal_tx.prev_transaction_hash, compare_hash1) == 0)
+					bal = balance_add(bal, &temporal_node->b.normal_tx.dest_pubkey, -1);
+				else if (byte32_cmp(longest_node->b.normal_tx.prev_transaction_hash, compare_hash2) == 0)
+					bal = balance_add(bal, &temporal_node->b.reward_tx.dest_pubkey, -1);
+
+				temporal_node = temporal_node->parent;
+			}
+		}
+		longest_node = longest_node->parent;
+
 	}
 
+	// add coin for genesis block
+
+	bal = balance_add(bal, &longest_node->b.reward_tx.dest_pubkey, 1);
+
+
+	/* Organize into a tree, check validity, and ou
+	tput balances. */
+
+	struct balance *balances = bal, *p, *next;
 	/* Print out the list of balances. */
 	for (p = balances; p != NULL; p = next) {
 		next = p->next;
