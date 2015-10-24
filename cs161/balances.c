@@ -41,11 +41,7 @@ int validness_test (const struct blockchain_node *node, int argc) {
 
 	hash_output hop;
 
-    // for (int i =1; i < argc; i++) {
-	// printf("block b's height: [%u] \n",array_of_block[i].b.height);
-
 	// FIRST BULLET POINT
-
 	// check the block that has height 0 must have genesis value
 	if (node->b.height == 0) {
 
@@ -247,10 +243,6 @@ int main(int argc, char *argv[])
 		count ++;
 		array_of_block[i] = x;
 
-		// print the height and nonce of block b
-		// printf("block b's height: [%u] \n",array_of_block[i].b.height);
-		// printf("block b's nonce: [%u] \n",array_of_block[i].b.nonce);
-
 	}
 
 	// sorting an array
@@ -275,7 +267,6 @@ int main(int argc, char *argv[])
     	if (array_of_block[i].b.height == 0){
     		array_of_block[i].parent = &array_of_block[i];
     	}
-
     	else {
     		int single = 0;
     		for (int p=1; p < argc; ++p) {
@@ -289,9 +280,7 @@ int main(int argc, char *argv[])
     			}
     			if (single == 0)
     				array_of_block[i].parent = &array_of_block[i];
-
     		}
-
     	}
     }
 
@@ -302,30 +291,61 @@ int main(int argc, char *argv[])
     	printf("block b's height: [%u], block b's parents height: [%u] \n",array_of_block[i].b.height, array_of_block[i].parent->b.height);
     }
 
+	struct balance *balances = NULL, *p, *next;
+   	//making the balance from the built tree
+	
+	int max = 0;
    	// ASSIGN VALIDITY TO ALL BLOCKS
-
    	for (i = 1; i < argc; ++i) {
    		array_of_block[i].is_valid = validness_test(&array_of_block[i], argc);
    	}
 
    	for (i = 1; i < argc; ++i) {
-   		if (array_of_block[i].is_valid == 1)
-   			printf("BLOCK[%i] IS VALID!\n",i);
-   		else
-   			printf("BLOCK[%i] IS NOT VALID!\n",i);
+   		if (array_of_block[i].is_valid == 1){
+   			// printf("BLOCK[%i] IS VALID!\n",i);
+   			array_of_block[i].parent = &array_of_block[i];
+   			if (array_of_block[i].parent->b.height >max )
+   			{
+   				max  = array_of_block[i].parent->b.height;
+   			}
+   		}
 
+   		else
+   			// printf("BLOCK[%i] IS NOT VALID!\n",i);
+			// array_of_block[i].parent = &array_of_block[i];
+			array_of_block[i].parent->b.height = -1;
    	}
 
 	/* Organize into a tree, check validity, and output balances. */
 	/* TODO */
+	int mainPath[argc];
+	int mIndex = 0;
+   	for (i = 1; i<argc ; i++)
+   	{	
+   		if (array_of_block[i].parent->b.height !=-1)
+   		{
+   				// printf("blockno %i\n",i);
+   				mainPath[mIndex] = i;
+   				mIndex++;
+   		   		// printf("parent %i\n",array_of_block[i].parent->b.height);
+   		   		// if (array_of_block[i].parent->b.height == max ){
+   		   			// printf("Mainchain end\n");
+   		   		// }
+   		   		// printf("Max : %i\n", max );}
+   		 }
+   	}
+   	printf("Mainchain\n");
+	for (i = 0; i<argc;i++){
+		printf ("%i\n",mainPath[i]);
+	}
 
-	struct balance *balances = NULL, *p, *next;
 	/* Print out the list of balances. */
 	for (p = balances; p != NULL; p = next) {
 		next = p->next;
 		printf("%s %d\n", byte32_to_hex(p->pubkey.x), p->balance);
 		free(p);
 	}
+
 
 	return 0;
 }
